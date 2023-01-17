@@ -1,10 +1,7 @@
-require('dotenv').config()
-
-const express = require('express');
-const app = express();
-const bodyParser = require('body-parser');
-const connection = require('./database');
+const express = require("express");
 const cors = require("cors");
+
+const app = express();
 
 var corsOptions = {
   origin: "http://localhost:8081"
@@ -15,7 +12,18 @@ app.use(cors(corsOptions));
 // parse requests of content-type - application/json
 app.use(express.json());
 
-app.get('/', (req,res) => res.send('Try: /status, /warehouses, or /warehouses/2') );
+const db = require("./app/models");
+db.sequelize.sync({ force: true }).then(() => {
+  console.log("Drop and re-sync db.");
+});
+
+// parse requests of content-type - application/x-www-form-urlencoded
+app.use(express.urlencoded({ extended: true }));
+
+// simple route
+app.get("/", (req, res) => {
+  res.json({ message: 'Try: /status, /warehouses, or /warehouses/2'});
+});
 
 app.get('/status', (req, res) => res.json('Success.') );
 
@@ -40,9 +48,8 @@ app.route('/warehouses/:id')
     );
   });
 
-// Use port 8080 by default, unless configured differently in Google Cloud
-const port = process.env.PORT || 8080;
-app.listen(port, () => {
-   console.log(`App is running at: http://localhost:${port}`);
+// set port, listen for requests
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}.`);
 });
-
